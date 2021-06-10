@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Bluetooth-Mora</string>
+    <string name="with_computer_mora">與電腦猜拳</string>
+    <string name="with_player_mora">與玩家猜拳</string>
+    <string name="self">自己</string>
+    <string name="initiate">發起</string>
+    <string name="opposite">對方</string>
+    <string name="scissors">剪刀</string>
+    <string name="stone">石頭</string>
+    <string name="paper">布</string>
+    <string name="win">恭喜，你贏了！</string>
+    <string name="lose">很可惜，你輸了！</string>
+    <string name="draw">平手！</string>
+    <string name="game">猜拳對決</string>
+    <string name="close_game">關閉遊戲</string>
+</resources>

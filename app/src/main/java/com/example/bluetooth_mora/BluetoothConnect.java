@@ -27,7 +27,7 @@ public class BluetoothConnect {
     public static OutputStream mServer_OutputStream;
     public static OutputStream mClient_OutputStream;
 
-    private static AcceptThread mAcceptThread;
+    private AcceptThread mAcceptThread;
 
     public BluetoothConnect(BluetoothAdapter bluetoothAdapter) {
         this.mBluetoothAdapter = bluetoothAdapter;
@@ -40,7 +40,7 @@ public class BluetoothConnect {
         }
     }
 
-    public static void cancelAcceptThread() {
+    public void cancelAcceptThread() {
         if (mAcceptThread != null) {
             try {
                 mAcceptThread.join();

@@ -6,23 +6,20 @@ import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 
-public class MatchActivity extends AppCompatActivity implements RecyclerViewAdapter.ViewHolder.RecyclerDelegate {
-    private RecyclerViewAdapter recyclerViewAdapter;
+public class MatchActivity extends AppCompatActivity implements BluetoothViewAdapter.ViewHolder.BluetoothDelegate {
+    private BluetoothViewAdapter bluetoothViewAdapter;
     // 獲取到藍芽介面卡
     private BluetoothAdapter bluetoothAdapter;
     // 選中傳送資料的藍芽裝置,全域性變數,否則連線在方法執行完就結束了
@@ -44,11 +41,10 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
         return map;
     }
 
-    private final Thread ClientThread = new Thread(new Runnable() {
+    // 接收服務端資料
+    private final Thread ReceiveServerThread = new Thread(new Runnable() {
         @Override
         public void run() {
-            Log.d("ClientThread", "run");
-
             readerStop = false;
 
             while (!readerStop) {
@@ -64,7 +60,7 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
 
                             HashMap<String, String> map = str2map(value);
 
-                            if (map.containsKey("challenge")) {
+                            if (map.containsKey("duel")) {
                                 readerStop = true;
                                 Intent it = new Intent(MatchActivity.this, GameActivity.class);
                                 startActivity(it);
@@ -78,11 +74,11 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
         }
     });
 
-    private final Thread ServerThread = new Thread(new Runnable() {
+
+    // 接收客戶端資料
+    private final Thread ReceiveClientThread = new Thread(new Runnable() {
         @Override
         public void run() {
-            Log.d("ServerThread", "run");
-
             readerStop = false;
 
             while (!readerStop) {
@@ -98,10 +94,10 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
 
                             HashMap<String, String> map = str2map(value);
 
-                            if (map.containsKey("challenge")) {
+                            if (map.containsKey("duel")) {
                                 readerStop = true;
                                 map = new HashMap<>();
-                                map.put("challenge", "TRUE");
+                                map.put("duel", "TRUE");
                                 send(map, 2);
                                 Intent it = new Intent(MatchActivity.this, GameActivity.class);
                                 startActivity(it);
@@ -115,33 +111,33 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
         }
     });
 
-    public static void send(HashMap<String, String> dict, int select) {
+    public static void send(HashMap<String, String> map, int select) {
         try {
             switch (select) {
-                case 1:
+                case 1: // 向服務端傳資料
                     BluetoothSocket Server_Socket = BluetoothConnect.mServer_Socket;
                     if (Server_Socket == null) return;
                     if (!Server_Socket.isConnected()) return;
-                    OutputStream mmServer_OutputStream = Server_Socket.getOutputStream();
-                    if (mmServer_OutputStream == null) return;
+                    OutputStream Server_OutputStream = Server_Socket.getOutputStream();
+                    if (Server_OutputStream == null) return;
 
                     try {
-                        mmServer_OutputStream.write(dict.toString().getBytes());
-                        mmServer_OutputStream.flush();
+                        Server_OutputStream.write(map.toString().getBytes());
+                        Server_OutputStream.flush();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     break;
-                case 2:
+                case 2: // 向客戶端傳資料
                     BluetoothSocket Client_Socket = BluetoothConnect.mClient_Socket;
                     if (Client_Socket == null) return;
                     if (!Client_Socket.isConnected()) return;
-                    OutputStream mmClient_OutputStream = Client_Socket.getOutputStream();
-                    if (mmClient_OutputStream == null) return;
+                    OutputStream Client_OutputStream = Client_Socket.getOutputStream();
+                    if (Client_OutputStream == null) return;
 
                     try {
-                        mmClient_OutputStream.write(dict.toString().getBytes());
-                        mmClient_OutputStream.flush();
+                        Client_OutputStream.write(map.toString().getBytes());
+                        Client_OutputStream.flush();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -157,12 +153,12 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
         setContentView(R.layout.activity_match);
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        recyclerViewAdapter = new RecyclerViewAdapter(bluetoothAdapter);
-        recyclerViewAdapter.setDelegate(this);
+        bluetoothViewAdapter = new BluetoothViewAdapter(bluetoothAdapter);
+        bluetoothViewAdapter.setDelegate(this);
 
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerView.setAdapter(bluetoothViewAdapter);
 
         if (bluetoothAdapter == null) {
             new AlertDialog.Builder(this)
@@ -182,16 +178,15 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
         btnRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                recyclerViewAdapter.notifyDataSetChanged();
+                bluetoothViewAdapter.notifyDataSetChanged();
             }
         });
 
         mBluetoothConnect = new BluetoothConnect(bluetoothAdapter);
         mBluetoothConnect.startAcceptThread();
 
-        ServerThread.start();
+        ReceiveClientThread.start();
 
-        System.out.println("onCreate");
         updateList();
     }
 
@@ -202,11 +197,11 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
     }
 
     private void updateList() {
-        recyclerViewAdapter.notifyDataSetChanged();
+        bluetoothViewAdapter.notifyDataSetChanged();
     }
 
     @Override
-    public void RecyclerBtnConfirmOnClick(View view, BluetoothDevice device) {
+    public void BluetoothBtnConfirmOnClick(View view, BluetoothDevice device) {
         new AlertDialog.Builder(this)
                 .setTitle("猜拳")
                 .setCancelable(true)
@@ -214,19 +209,20 @@ public class MatchActivity extends AppCompatActivity implements RecyclerViewAdap
                 .setPositiveButton("確定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        mBluetoothConnect.Connect(device.getAddress());
-                        if (ClientThread.getState().equals(Thread.State.TERMINATED)) {
+                        mBluetoothConnect.Connect(device.getAddress()); // 與服務端連線
+                        if (ReceiveServerThread.getState().equals(Thread.State.TERMINATED)) {
                             try {
-                                ClientThread.join();
+                                ReceiveServerThread.join();
+                                ReceiveServerThread.start();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
                         } else {
-                            ClientThread.start();
+                            ReceiveServerThread.start();
                         }
-                        HashMap<String, String> dict = new HashMap<>();
-                        dict.put("challenge", "TRUE");
-                        send(dict, 1);
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put("duel", "TRUE");
+                        send(map, 1);
                     }
                 })
                 .setNeutralButton("取消", (dialogInterface, i) -> {})

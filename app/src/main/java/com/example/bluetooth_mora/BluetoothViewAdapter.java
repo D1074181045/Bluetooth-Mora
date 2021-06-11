@@ -14,14 +14,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.Set;
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+public class BluetoothViewAdapter extends RecyclerView.Adapter<BluetoothViewAdapter.ViewHolder> {
     private final BluetoothAdapter mBluetoothAdapter;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public static RecyclerDelegate mDelegate;
+        public static BluetoothDelegate mDelegate;
 
-        public interface RecyclerDelegate {
-            void RecyclerBtnConfirmOnClick(View view, BluetoothDevice device);
+        public interface BluetoothDelegate {
+            void BluetoothBtnConfirmOnClick(View view, BluetoothDevice device);
         }
 
         private final ImageView icon;
@@ -47,17 +47,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             btnConfirm.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (mDelegate != null) mDelegate.RecyclerBtnConfirmOnClick(view, device);
+                    if (mDelegate != null) mDelegate.BluetoothBtnConfirmOnClick(view, device);
                 }
             });
         }
     }
 
-    public RecyclerViewAdapter(BluetoothAdapter bluetoothAdapter) {
+    public BluetoothViewAdapter(BluetoothAdapter bluetoothAdapter) {
         this.mBluetoothAdapter = bluetoothAdapter;
     }
 
-    public void setDelegate(ViewHolder.RecyclerDelegate delegate) {
+    public void setDelegate(ViewHolder.BluetoothDelegate delegate) {
         ViewHolder.mDelegate = delegate;
     }
 
@@ -66,11 +66,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.bluetooth_device_item, parent, false);
-        return new RecyclerViewAdapter.ViewHolder(view);
+        return new BluetoothViewAdapter.ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerViewAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull BluetoothViewAdapter.ViewHolder holder, int position) {
         Set<BluetoothDevice> pairedDevices = this.mBluetoothAdapter.getBondedDevices();
         holder.loadDevice(pairedDevices.toArray(new BluetoothDevice[0])[position]);
     }

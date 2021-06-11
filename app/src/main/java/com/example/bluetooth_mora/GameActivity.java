@@ -3,7 +3,6 @@ package com.example.bluetooth_mora;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -22,83 +21,51 @@ public class GameActivity extends AppCompatActivity {
     public InputStream mInputStream;
     public OutputStream mOutputStream;
 
-    public Thread ServerThread = new Thread(new Runnable() {
+    private boolean readerStop;
+
+    public Thread Thread = new Thread(new Runnable() {
         @Override
         public void run() {
-            while (mInputStream != null) {
-                try {
-                    if (mInputStream.available() > 0) {
-                        // 建立一個256位元組的緩衝
-                        byte[] buffer = new byte[256];
-                        // 每次讀取256位元組,並儲存其讀取的角標
-                        int count = mInputStream.read(buffer);
+            readerStop = false;
 
-                        if (count > 0) {
-                            String value = new String(buffer, 0, count, "utf-8");
-                            HashMap<String, String> map = MatchActivity.str2map(value);
-                            if (map.containsKey("mora")) {
-                                while (SelfMoraSelect.equals("")) ;
+            while (!readerStop) {
+                if (mInputStream != null) {
+                    try {
+                        if (mInputStream.available() > 0) {
+                            // 建立一個256位元組的緩衝
+                            byte[] buffer = new byte[256];
+                            // 每次讀取256位元組,並儲存其讀取的角標
+                            int count = mInputStream.read(buffer);
+
+                            if (count > 0) {
+                                String value = new String(buffer, 0, count, "utf-8");
+                                HashMap<String, String> map = MatchActivity.str2map(value);
+                                if (map.containsKey("mora"))
+                                    while (SelfMoraSelect.equals("")); // 等待用戶猜拳
+                                else if (map.containsKey("finish"))
+                                    mInputStream.close();
+                                else
+                                    continue;
+
                                 Message msg = new Message();
                                 msg.obj = map;
                                 handler.sendMessage(msg);
-                            }
-                            if (map.containsKey("finish")) {
-                                Message msg = new Message();
-                                msg.obj = map;
-                                handler.sendMessage(msg);
-                                mInputStream.close();
                             }
                         }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        break;
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    break;
                 }
             }
         }
     });
 
-    public Thread ClientThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            while (mInputStream != null) {
-                try {
-                    if (mInputStream.available() > 0) {
-                        // 建立一個256位元組的緩衝
-                        byte[] buffer = new byte[256];
-                        // 每次讀取256位元組,並儲存其讀取的角標
-                        int count = mInputStream.read(buffer);
-
-                        if (count > 0) {
-                            String value = new String(buffer, 0, count, "utf-8");
-                            HashMap<String, String> map = MatchActivity.str2map(value);
-                            if (map.containsKey("mora")) {
-                                while (SelfMoraSelect.equals("")) ;
-                                Message msg = new Message();
-                                msg.obj = map;
-                                handler.sendMessage(msg);
-                            }
-                            if (map.containsKey("finish")) {
-                                Message msg = new Message();
-                                msg.obj = map;
-                                handler.sendMessage(msg);
-                                mInputStream.close();
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
-        }
-    });
-
-    public void send(HashMap<String, String> dict) {
+    public void send(HashMap<String, String> map) {
         if (mOutputStream == null) return;
 
         try {
-            mOutputStream.write(dict.toString().getBytes());
+            mOutputStream.write(map.toString().getBytes());
             mOutputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -187,11 +154,11 @@ public class GameActivity extends AppCompatActivity {
         if (BluetoothConnect.mServer_Socket != null) {
             mInputStream = BluetoothConnect.mServer_InputStream;
             mOutputStream = BluetoothConnect.mServer_OutputStream;
-            ServerThread.start();
+            Thread.start();
         } else if (BluetoothConnect.mClient_Socket != null) {
             mInputStream = BluetoothConnect.mClient_InputStream;
             mOutputStream = BluetoothConnect.mClient_OutputStream;
-            ClientThread.start();
+            Thread.start();
         }
 
         mImgViewOpp = findViewById(R.id.imgViewOpp);

@@ -22,7 +22,7 @@
         app:layout_constraintVertical_bias="0.023" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/txtSelf"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -41,7 +41,7 @@
         app:layout_constraintVertical_bias="0.125" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/txtOpp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
@@ -73,18 +73,17 @@
         android:id="@+id/btnCloseGame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="20dp"
         android:text="@string/close_game"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="@+id/txtResult"
-        app:layout_constraintHorizontal_bias="0.39"
         app:layout_constraintStart_toStartOf="@+id/txtResult"
         app:layout_constraintTop_toBottomOf="@+id/txtResult" />
 
     <TextView
         android:id="@+id/txtResult"
-        android:layout_width="174dp"
-        android:layout_height="66dp"
+        android:layout_width="170dp"
+        android:layout_height="43dp"
         android:layout_marginTop="28dp"
         android:ems="8"
         android:gravity="center_horizontal"
@@ -124,17 +123,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="48dp"
-        app:layout_constraintEnd_toEndOf="@+id/textView3"
-        app:layout_constraintStart_toStartOf="@+id/textView3"
-        app:layout_constraintTop_toBottomOf="@+id/textView3" />
+        app:layout_constraintEnd_toEndOf="@+id/txtOpp"
+        app:layout_constraintStart_toStartOf="@+id/txtOpp"
+        app:layout_constraintTop_toBottomOf="@+id/txtOpp" />
 
     <ImageView
         android:id="@+id/imgViewSelf"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="44dp"
-        app:layout_constraintEnd_toEndOf="@+id/textView"
-        app:layout_constraintStart_toStartOf="@+id/textView"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintEnd_toEndOf="@+id/txtSelf"
+        app:layout_constraintStart_toStartOf="@+id/txtSelf"
+        app:layout_constraintTop_toBottomOf="@+id/txtSelf" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

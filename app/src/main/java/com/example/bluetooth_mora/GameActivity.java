@@ -3,6 +3,7 @@ package com.example.bluetooth_mora;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -23,6 +24,19 @@ public class GameActivity extends AppCompatActivity {
 
     private boolean readerStop;
 
+    public static HashMap<String, String> str2map(String str) {
+        str = str.substring(1, str.length() - 1);
+        String[] keyValuePairs = str.split(",");
+        HashMap<String, String> map = new HashMap<>();
+
+        for (String pair : keyValuePairs) {
+            String[] entry = pair.split("=");
+            map.put(entry[0].trim(), entry[1].trim());
+        }
+
+        return map;
+    }
+
     public Thread Thread = new Thread(new Runnable() {
         @Override
         public void run() {
@@ -39,7 +53,7 @@ public class GameActivity extends AppCompatActivity {
 
                             if (count > 0) {
                                 String value = new String(buffer, 0, count, "utf-8");
-                                HashMap<String, String> map = MatchActivity.str2map(value);
+                                HashMap<String, String> map = str2map(value);
                                 if (map.containsKey("mora"))
                                     while (SelfMoraSelect.equals("")); // 等待用戶猜拳
                                 else if (map.containsKey("finish"))
@@ -82,7 +96,7 @@ public class GameActivity extends AppCompatActivity {
             if (map.containsKey("mora"))
                 mora(map.get("mora"));
             if (map.containsKey("finish"))
-                finish();
+                close_this();
         }
     };
 
@@ -152,12 +166,20 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
 
         if (BluetoothConnect.mServer_Socket != null) {
-            mInputStream = BluetoothConnect.mServer_InputStream;
-            mOutputStream = BluetoothConnect.mServer_OutputStream;
+            try {
+                mInputStream = BluetoothConnect.mServer_Socket.getInputStream();
+                mOutputStream = BluetoothConnect.mServer_Socket.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Thread.start();
         } else if (BluetoothConnect.mClient_Socket != null) {
-            mInputStream = BluetoothConnect.mClient_InputStream;
-            mOutputStream = BluetoothConnect.mClient_OutputStream;
+            try {
+                mInputStream = BluetoothConnect.mClient_Socket.getInputStream();
+                mOutputStream = BluetoothConnect.mClient_Socket.getOutputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             Thread.start();
         }
 
@@ -222,13 +244,20 @@ public class GameActivity extends AppCompatActivity {
         }
     };
 
+    public void close_this() {
+        Intent intent = new Intent(GameActivity.this, MatchActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
+
     private final View.OnClickListener btnCloseGameOnClick = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
             HashMap<String, String> map = new HashMap<>();
             map.put("finish", "TRUE");
             send(map);
-            finish();
+            close_this();
         }
     };
 }

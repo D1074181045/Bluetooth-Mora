@@ -34,21 +34,8 @@ public class BluetoothConnect {
     }
 
     public void startAcceptThread() {
-        if (mAcceptThread == null) {
-            mAcceptThread = new AcceptThread();
-            mAcceptThread.start();
-        }
-    }
-
-    public void cancelAcceptThread() {
-        if (mAcceptThread != null) {
-            try {
-                mAcceptThread.join();
-                mAcceptThread = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        mAcceptThread = new AcceptThread();
+        mAcceptThread.start();
     }
 
     // 服務端接收資訊執行緒
@@ -79,17 +66,12 @@ public class BluetoothConnect {
 
     public void Connect(String address) {
         // 如果選擇裝置為空則代表還沒有選擇裝置
-        if (mSelectDevice == null) {
-            // 通過地址獲取到該裝置
-            mSelectDevice = mBluetoothAdapter.getRemoteDevice(address);
-        }
-
         try {
-            // 獲取到服務端介面
+            // 獲取到輸出流,向外寫資料
+            mSelectDevice = mBluetoothAdapter.getRemoteDevice(address);
             mServer_Socket = mSelectDevice.createRfcommSocketToServiceRecord(serialPortUUID);
             // 向服務端傳送連線
             mServer_Socket.connect();
-            // 獲取到輸出流,向外寫資料
             mServer_OutputStream = mServer_Socket.getOutputStream();
             mServer_InputStream = mServer_Socket.getInputStream();
         } catch (IOException e) {

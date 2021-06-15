@@ -165,6 +165,8 @@ public class GameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        setTitle("遊戲頁面");
+
         if (BluetoothConnect.mServer_Socket != null) {
             try {
                 mInputStream = BluetoothConnect.mServer_Socket.getInputStream();

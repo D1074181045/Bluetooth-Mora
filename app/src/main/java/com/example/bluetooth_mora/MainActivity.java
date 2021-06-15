@@ -13,6 +13,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setTitle("遊戲模式");
+
         Button with_computer_pk = findViewById(R.id.with_computer_mora);
         with_computer_pk.setOnClickListener(new View.OnClickListener() {
             @Override

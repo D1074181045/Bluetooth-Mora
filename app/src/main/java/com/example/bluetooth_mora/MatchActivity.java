@@ -162,6 +162,8 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_match);
 
+        setTitle("選擇配對裝置");
+
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         bluetoothViewAdapter = new BluetoothViewAdapter(bluetoothAdapter);
         bluetoothViewAdapter.setDelegate(this);

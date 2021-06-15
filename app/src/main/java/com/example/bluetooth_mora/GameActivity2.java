@@ -72,6 +72,8 @@ public class GameActivity2 extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        setTitle("遊戲頁面");
+
         mImgViewOpp = findViewById(R.id.imgViewOpp);
         mImgViewSelf = findViewById(R.id.imgViewSelf);
         mTxtResult = findViewById(R.id.txtResult);

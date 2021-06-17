@@ -75,7 +75,11 @@ public class GameActivity2 extends AppCompatActivity {
         setTitle("遊戲頁面");
 
         mImgViewOpp = findViewById(R.id.imgViewOpp);
+        mImgViewOpp.setImageResource(R.drawable.question);
+
         mImgViewSelf = findViewById(R.id.imgViewSelf);
+        mImgViewSelf.setImageResource(R.drawable.question);
+
         mTxtResult = findViewById(R.id.txtResult);
 
         ImageButton mImgBtnScissors = findViewById(R.id.imgBtnScissors);
@@ -95,6 +99,7 @@ public class GameActivity2 extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             mImgViewSelf.setImageResource(R.drawable.scissors);
+            mImgViewOpp.setImageResource(R.drawable.question);
             SelfMoraSelect = "Scissors";
             int iComPlay = (int)(Math.random()*3 + 1);
             mora(iComPlay);
@@ -105,6 +110,7 @@ public class GameActivity2 extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             mImgViewSelf.setImageResource(R.drawable.stone);
+            mImgViewOpp.setImageResource(R.drawable.question);
             SelfMoraSelect = "Stone";
             int iComPlay = (int)(Math.random()*3 + 1);
             mora(iComPlay);
@@ -115,6 +121,7 @@ public class GameActivity2 extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             mImgViewSelf.setImageResource(R.drawable.paper);
+            mImgViewOpp.setImageResource(R.drawable.question);
             SelfMoraSelect = "Paper";
             int iComPlay = (int)(Math.random()*3 + 1);
             mora(iComPlay);

@@ -186,7 +186,11 @@ public class GameActivity extends AppCompatActivity {
         }
 
         mImgViewOpp = findViewById(R.id.imgViewOpp);
+        mImgViewOpp.setImageResource(R.drawable.question);
+
         mImgViewSelf = findViewById(R.id.imgViewSelf);
+        mImgViewSelf.setImageResource(R.drawable.question);
+
         mTxtResult = findViewById(R.id.txtResult);
         mImgBtnScissors = findViewById(R.id.imgBtnScissors);
         mImgBtnStone = findViewById(R.id.imgBtnStone);
@@ -211,7 +215,7 @@ public class GameActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             mImgViewSelf.setImageResource(R.drawable.scissors);
-            mImgViewOpp.setImageBitmap(null);
+            mImgViewOpp.setImageResource(R.drawable.question);
             mora_status(false);
             HashMap<String, String> map = new HashMap<>();
             SelfMoraSelect = "Scissors";
@@ -224,7 +228,7 @@ public class GameActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             mImgViewSelf.setImageResource(R.drawable.stone);
-            mImgViewOpp.setImageBitmap(null);
+            mImgViewOpp.setImageResource(R.drawable.question);
             mora_status(false);
             HashMap<String, String> map = new HashMap<>();
             SelfMoraSelect = "Stone";
@@ -237,7 +241,7 @@ public class GameActivity extends AppCompatActivity {
         @Override
         public void onClick(View view) {
             mImgViewSelf.setImageResource(R.drawable.paper);
-            mImgViewOpp.setImageBitmap(null);
+            mImgViewOpp.setImageResource(R.drawable.question);
             mora_status(false);
             HashMap<String, String> map = new HashMap<>();
             SelfMoraSelect = "Paper";

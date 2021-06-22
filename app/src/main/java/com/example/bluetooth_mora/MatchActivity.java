@@ -16,18 +16,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 
-public class MatchActivity extends AppCompatActivity implements BluetoothViewAdapter.ViewHolder.BluetoothDelegate {
-    private BluetoothViewAdapter bluetoothViewAdapter;
-    // 獲取到藍芽介面卡
-    private BluetoothAdapter bluetoothAdapter;
-    // 選中傳送資料的藍芽裝置,全域性變數,否則連線在方法執行完就結束了
+public class MatchActivity extends AppCompatActivity implements BluetoothViewAdapter.ViewHolder.BluetoothDelegate, BluetoothConnect.ReceivedDelegate {
+    // 藍芽連線
+    private BluetoothConnect mBluetoothConnect;
 
-    public BluetoothConnect mBluetoothConnect;
-    private boolean readerStop;
+    private BluetoothViewAdapter mBluetoothViewAdapter;
 
     public void restartApp() {
         Intent intent = getIntent();
@@ -35,91 +30,6 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
         startActivity(intent);
         android.os.Process.killProcess(android.os.Process.myPid());
     }
-
-    // 接收服務端資料
-    private final Thread ReceiveServerThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            readerStop = false;
-
-            while (!readerStop) {
-                try {
-                    if (BluetoothConnect.mServer_InputStream != null) {
-                        // 建立一個256位元組的緩衝
-                        byte[] buffer = new byte[256];
-                        // 每次讀取256位元組,並儲存其讀取的角標
-                        int count = BluetoothConnect.mServer_InputStream.read(buffer);
-
-                        if (count > 0) {
-                            String value = new String(buffer, 0, count, "utf-8");
-
-                            if (value.equals("accept")) {
-                                readerStop = true;
-                                Intent it = new Intent(MatchActivity.this, GameActivity.class);
-                                startActivity(it);
-                            } else if (value.equals("refuse")) {
-                                restartApp();
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    });
-
-
-    // 接收客戶端資料
-    private final Thread ReceiveClientThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            readerStop = false;
-
-            while (!readerStop) {
-                try {
-                    if (BluetoothConnect.mClient_InputStream != null) {
-                        // 建立一個256位元組的緩衝
-                        byte[] buffer = new byte[256];
-                        // 每次讀取256位元組,並儲存其讀取的角標
-                        int count = BluetoothConnect.mClient_InputStream.read(buffer);
-
-                        if (count > 0) {
-                            String value = new String(buffer, 0, count, "utf-8");
-
-                            if (value.equals("duel")) {
-                                Looper.prepare();
-                                new AlertDialog.Builder(MatchActivity.this)
-                                        .setTitle("猜拳")
-                                        .setCancelable(false)
-                                        .setMessage("接受猜拳對決?")
-                                        .setPositiveButton("接受", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                send("accept", 2);
-                                                readerStop = true;
-                                                Intent it = new Intent(MatchActivity.this, GameActivity.class);
-                                                startActivity(it);
-                                            }
-                                        })
-                                        .setNeutralButton("拒絕", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                send("refuse", 2);
-                                                restartApp();
-                                            }
-                                        })
-                                        .show();
-                                Looper.loop();
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    });
 
     public static void send(String str, int select) {
         try {
@@ -164,14 +74,8 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
 
         setTitle("選擇配對裝置");
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bluetoothViewAdapter = new BluetoothViewAdapter(bluetoothAdapter);
-        bluetoothViewAdapter.setDelegate(this);
-
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(bluetoothViewAdapter);
-
+        // 獲取到藍芽介面卡
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (bluetoothAdapter == null) {
             new AlertDialog.Builder(this)
                     .setTitle("本裝置不支援藍芽功能")
@@ -185,19 +89,26 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
                     })
                     .show();
         }
+        mBluetoothViewAdapter = new BluetoothViewAdapter(bluetoothAdapter);
+        mBluetoothViewAdapter.setDelegate(this);
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(mBluetoothViewAdapter);
 
         Button btnRefresh = findViewById(R.id.btnRefresh);
         btnRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                bluetoothViewAdapter.notifyDataSetChanged();
+                mBluetoothViewAdapter.notifyDataSetChanged();
             }
         });
 
         mBluetoothConnect = new BluetoothConnect(bluetoothAdapter);
+        mBluetoothConnect.setDelegate(this);
         mBluetoothConnect.startAcceptThread();
 
-        ReceiveClientThread.start();
+        mBluetoothConnect.ReceiveClientThread.start();
 
         updateList();
     }
@@ -209,7 +120,7 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
     }
 
     private void updateList() {
-        bluetoothViewAdapter.notifyDataSetChanged();
+        mBluetoothViewAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -222,15 +133,55 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         mBluetoothConnect.Connect(device.getAddress()); // 與服務端連線
-                        if (ReceiveServerThread.getState().equals(Thread.State.TERMINATED)) {
-                            ReceiveServerThread.interrupt();
+                        if (mBluetoothConnect.ReceiveServerThread.getState().equals(Thread.State.TERMINATED)) {
+                            mBluetoothConnect.ReceiveServerThread.interrupt();
                         }
-                        ReceiveServerThread.start();
+                        mBluetoothConnect.ReceiveServerThread.start();
                         send("duel", 1);
                     }
                 })
                 .setNeutralButton("取消", (dialogInterface, i) -> {
                 })
                 .show();
+    }
+
+    @Override
+    public void ReceivedServer(String value) {
+        if (value.equals("accept")) {
+            mBluetoothConnect.StopReader();
+            Intent it = new Intent(MatchActivity.this, GameActivity.class);
+            startActivity(it);
+        } else if (value.equals("refuse")) {
+            restartApp();
+        }
+    }
+
+    @Override
+    public void ReceivedClient(String value) {
+        if (value.equals("duel")) {
+            Looper.prepare();
+            new AlertDialog.Builder(MatchActivity.this)
+                    .setTitle("猜拳")
+                    .setCancelable(false)
+                    .setMessage("接受猜拳對決?")
+                    .setPositiveButton("接受", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            send("accept", 2);
+                            mBluetoothConnect.StopReader();
+                            Intent it = new Intent(MatchActivity.this, GameActivity.class);
+                            startActivity(it);
+                        }
+                    })
+                    .setNeutralButton("拒絕", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            send("refuse", 2);
+                            restartApp();
+                        }
+                    })
+                    .show();
+            Looper.loop();
+        }
     }
 }

@@ -11,35 +11,110 @@ import java.io.OutputStream;
 import java.util.UUID;
 
 public class BluetoothConnect {
+    // UUID,藍芽建立連結需要的
     private final UUID serialPortUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
+    // 獲取到的藍芽介面卡
     private final BluetoothAdapter mBluetoothAdapter;
-    private BluetoothServerSocket mServerSocket;
 
-    private BluetoothDevice mSelectDevice;
+    // 獲取到的介面
+    public static BluetoothSocket mServer_Socket, mClient_Socket;
+    // 獲取到的輸入流
+    public static InputStream mServer_InputStream, mClient_InputStream;
+    // 獲取到的輸出流
+    public static OutputStream mServer_OutputStream, mClient_OutputStream;
 
-    public static BluetoothSocket mServer_Socket;
-    public static BluetoothSocket mClient_Socket;
+    private boolean readerStop;
 
-    public static InputStream mServer_InputStream;
-    public static InputStream mClient_InputStream;
+    private ReceivedDelegate mReceiveDelegate;
 
-    public static OutputStream mServer_OutputStream;
-    public static OutputStream mClient_OutputStream;
-
-    private AcceptThread mAcceptThread;
+    public interface ReceivedDelegate {
+        void ReceivedServer(String value);
+        void ReceivedClient(String value);
+    }
 
     public BluetoothConnect(BluetoothAdapter bluetoothAdapter) {
         this.mBluetoothAdapter = bluetoothAdapter;
     }
 
+    public void setDelegate(ReceivedDelegate delegate) {
+        mReceiveDelegate = delegate;
+    }
+
+    public void StopReader() {
+        readerStop = true;
+    }
+
+    // 接收服務端資料
+    public final Thread ReceiveServerThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            readerStop = false;
+
+            while (!readerStop) {
+                try {
+                    if (mServer_InputStream == null)
+                        continue;
+                    if (mServer_InputStream.available() <= 0)
+                        continue;
+
+                    // 建立一個256位元組的緩衝
+                    byte[] buffer = new byte[256];
+                    // 每次讀取256位元組,並儲存其讀取的角標
+                    int count = mServer_InputStream.read(buffer);
+
+                    if (count > 0) {
+                        String value = new String(buffer, 0, count, "utf-8");
+                        if (mReceiveDelegate != null)
+                            mReceiveDelegate.ReceivedServer(value);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
+
+    // 接收客戶端資料
+    public final Thread ReceiveClientThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            readerStop = false;
+
+            while (!readerStop) {
+                try {
+                    if (mClient_InputStream == null)
+                        continue;
+                    if (mClient_InputStream.available() <= 0)
+                        continue;
+
+                    // 建立一個256位元組的緩衝
+                    byte[] buffer = new byte[256];
+                    // 每次讀取256位元組,並儲存其讀取的角標
+                    int count = mClient_InputStream.read(buffer);
+
+                    if (count > 0) {
+                        String value = new String(buffer, 0, count, "utf-8");
+                        if (mReceiveDelegate != null)
+                            mReceiveDelegate.ReceivedClient(value);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
+
     public void startAcceptThread() {
-        mAcceptThread = new AcceptThread();
+        AcceptThread mAcceptThread = new AcceptThread();
         mAcceptThread.start();
     }
 
     // 服務端接收資訊執行緒
     private class AcceptThread extends Thread {
+        // 服務端介面
+        private BluetoothServerSocket mServerSocket;
+
         public AcceptThread() {
             try {
                 // 通過UUID監聽請求,然後獲取到對應的服務端介面
@@ -65,10 +140,9 @@ public class BluetoothConnect {
     }
 
     public void Connect(String address) {
-        // 如果選擇裝置為空則代表還沒有選擇裝置
         try {
-            // 獲取到輸出流,向外寫資料
-            mSelectDevice = mBluetoothAdapter.getRemoteDevice(address);
+            // 選中傳送資料的藍芽裝置
+            BluetoothDevice mSelectDevice = mBluetoothAdapter.getRemoteDevice(address);
             mServer_Socket = mSelectDevice.createRfcommSocketToServiceRecord(serialPortUUID);
             // 向服務端傳送連線
             mServer_Socket.connect();

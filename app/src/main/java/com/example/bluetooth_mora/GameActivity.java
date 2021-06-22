@@ -43,34 +43,37 @@ public class GameActivity extends AppCompatActivity {
             readerStop = false;
 
             while (!readerStop) {
-                if (mInputStream != null) {
-                    try {
-                        if (mInputStream.available() > 0) {
-                            // 建立一個256位元組的緩衝
-                            byte[] buffer = new byte[256];
-                            // 每次讀取256位元組,並儲存其讀取的角標
-                            int count = mInputStream.read(buffer);
+                try {
+                    if (mInputStream == null)
+                        continue;
+                    if (mInputStream.available() <= 0)
+                        continue;
 
-                            if (count > 0) {
-                                String value = new String(buffer, 0, count, "utf-8");
-                                HashMap<String, String> map = str2map(value);
-                                if (map.containsKey("mora"))
-                                    while (SelfMoraSelect.equals("")); // 等待用戶猜拳
-                                else if (map.containsKey("finish"))
-                                    mInputStream.close();
-                                else
-                                    continue;
+                    // 建立一個256位元組的緩衝
+                    byte[] buffer = new byte[256];
+                    // 每次讀取256位元組,並儲存其讀取的角標
+                    int count = mInputStream.read(buffer);
 
-                                Message msg = new Message();
-                                msg.obj = map;
-                                handler.sendMessage(msg);
-                            }
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        break;
+                    if (count > 0) {
+                        String value = new String(buffer, 0, count, "utf-8");
+
+                        HashMap<String, String> map = str2map(value);
+                        if (map.containsKey("mora"))
+                            while (SelfMoraSelect.equals("")) ; // 等待用戶猜拳
+                        else if (map.containsKey("finish"))
+                            mInputStream.close();
+                        else
+                            continue;
+
+                        Message msg = new Message();
+                        msg.obj = map;
+                        handler.sendMessage(msg);
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    break;
                 }
+
             }
         }
     });
@@ -251,6 +254,7 @@ public class GameActivity extends AppCompatActivity {
     };
 
     public void close_this() {
+        readerStop = true;
         Intent intent = new Intent(GameActivity.this, MatchActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);

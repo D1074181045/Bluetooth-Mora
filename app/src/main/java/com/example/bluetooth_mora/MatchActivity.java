@@ -137,6 +137,8 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
                             mBluetoothConnect.ReceiveServerThread.interrupt();
                         }
                         mBluetoothConnect.ReceiveServerThread.start();
+                        BluetoothViewAdapter.ViewHolder.setBtnDisable(true);
+                        updateList();
                         send("duel", 1);
                     }
                 })

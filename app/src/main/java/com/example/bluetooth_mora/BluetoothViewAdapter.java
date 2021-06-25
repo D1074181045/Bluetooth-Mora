@@ -19,6 +19,7 @@ public class BluetoothViewAdapter extends RecyclerView.Adapter<BluetoothViewAdap
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public static BluetoothDelegate mDelegate;
+        private static boolean BtnDisable;
 
         public interface BluetoothDelegate {
             void BluetoothBtnConfirmOnClick(View view, BluetoothDevice device);
@@ -37,6 +38,10 @@ public class BluetoothViewAdapter extends RecyclerView.Adapter<BluetoothViewAdap
             btnConfirm = itemView.findViewById(R.id.btnConfirm);
         }
 
+        public static void setBtnDisable(boolean bool) {
+            BtnDisable = bool;
+        }
+
         void loadDevice(@NonNull BluetoothDevice device) {
             String name = device.getName();
             if (name == null) name = "裝置名稱未顯示";
@@ -44,12 +49,17 @@ public class BluetoothViewAdapter extends RecyclerView.Adapter<BluetoothViewAdap
             icon.setImageResource(R.drawable.ic_bluetooth_black_24dp);
             textName.setText(name);
             textAddress.setText(device.getAddress());
-            btnConfirm.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (mDelegate != null) mDelegate.BluetoothBtnConfirmOnClick(view, device);
-                }
-            });
+
+            if (BtnDisable) {
+                btnConfirm.setEnabled(false);
+            } else {
+                btnConfirm.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (mDelegate != null) mDelegate.BluetoothBtnConfirmOnClick(view, device);
+                    }
+                });
+            }
         }
     }
 
@@ -66,7 +76,7 @@ public class BluetoothViewAdapter extends RecyclerView.Adapter<BluetoothViewAdap
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.bluetooth_device_item, parent, false);
-        return new BluetoothViewAdapter.ViewHolder(view);
+        return new ViewHolder(view);
     }
 
     @Override

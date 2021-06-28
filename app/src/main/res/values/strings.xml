@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Bluetooth-Mora</string>
+    <string name="app_name">猜拳對決</string>
     <string name="with_computer_mora">與電腦猜拳</string>
     <string name="with_player_mora">與玩家猜拳</string>
     <string name="self">自己</string>

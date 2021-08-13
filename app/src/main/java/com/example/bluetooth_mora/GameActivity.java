@@ -13,9 +13,12 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.HashMap;
 
 public class GameActivity extends AppCompatActivity {
@@ -49,16 +52,13 @@ public class GameActivity extends AppCompatActivity {
                     if (mInputStream.available() <= 0)
                         continue;
 
-                    // 建立一個256位元組的緩衝
-                    byte[] buffer = new byte[256];
-                    // 每次讀取256位元組,並儲存其讀取的角標
-                    int count = mInputStream.read(buffer);
+                    BufferedReader bufferedInputStream = new BufferedReader(new InputStreamReader(mInputStream));
+                    String value = bufferedInputStream.readLine();
 
-                    if (count > 0) {
-                        String value = new String(buffer, 0, count, "utf-8");
-
+                    if (value.length() > 0) {
                         HashMap<String, String> map = str2map(value);
-                        if (map.containsKey("mora"))
+
+                        if (map.containsKey("mora") )
                             while (SelfMoraSelect.equals("")) ; // 等待用戶猜拳
                         else if (map.containsKey("finish"))
                             mInputStream.close();
@@ -81,12 +81,9 @@ public class GameActivity extends AppCompatActivity {
     public void send(HashMap<String, String> map) {
         if (mOutputStream == null) return;
 
-        try {
-            mOutputStream.write(map.toString().getBytes());
-            mOutputStream.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        PrintWriter printWriter = new PrintWriter(mOutputStream);
+        printWriter.write(map.toString() + "\n");
+        printWriter.flush();
     }
 
     @SuppressLint("HandlerLeak")

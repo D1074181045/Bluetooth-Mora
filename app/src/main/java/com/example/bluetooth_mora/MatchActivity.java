@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 
 public class MatchActivity extends AppCompatActivity implements BluetoothViewAdapter.ViewHolder.BluetoothDelegate, BluetoothConnect.ReceivedDelegate {
     // 藍芽連線
@@ -33,34 +34,25 @@ public class MatchActivity extends AppCompatActivity implements BluetoothViewAda
 
     public static void send(String str, int select) {
         try {
+            PrintWriter printWriter;
             switch (select) {
                 case 1: // 向服務端傳資料
                     BluetoothSocket Server_Socket = BluetoothConnect.mServer_Socket;
                     if (Server_Socket == null) return;
                     if (!Server_Socket.isConnected()) return;
-                    OutputStream Server_OutputStream = Server_Socket.getOutputStream();
-                    if (Server_OutputStream == null) return;
 
-                    try {
-                        Server_OutputStream.write(str.getBytes());
-                        Server_OutputStream.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    printWriter = new PrintWriter(Server_Socket.getOutputStream());
+                    printWriter.write(str + "\n");
+                    printWriter.flush();
                     break;
                 case 2: // 向客戶端傳資料
                     BluetoothSocket Client_Socket = BluetoothConnect.mClient_Socket;
                     if (Client_Socket == null) return;
                     if (!Client_Socket.isConnected()) return;
-                    OutputStream Client_OutputStream = Client_Socket.getOutputStream();
-                    if (Client_OutputStream == null) return;
 
-                    try {
-                        Client_OutputStream.write(str.getBytes());
-                        Client_OutputStream.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    printWriter = new PrintWriter(Client_Socket.getOutputStream());
+                    printWriter.write(str + "\n");
+                    printWriter.flush();
             }
         } catch (IOException e) {
             e.printStackTrace();

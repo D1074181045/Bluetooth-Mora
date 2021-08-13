@@ -5,8 +5,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.UUID;
 
@@ -58,13 +60,10 @@ public class BluetoothConnect {
                     if (mServer_InputStream.available() <= 0)
                         continue;
 
-                    // 建立一個256位元組的緩衝
-                    byte[] buffer = new byte[256];
-                    // 每次讀取256位元組,並儲存其讀取的角標
-                    int count = mServer_InputStream.read(buffer);
+                    BufferedReader bufferedInputStream = new BufferedReader(new InputStreamReader(mServer_InputStream));
+                    String value = bufferedInputStream.readLine();
 
-                    if (count > 0) {
-                        String value = new String(buffer, 0, count, "utf-8");
+                    if (value.length() > 0) {
                         if (mReceiveDelegate != null)
                             mReceiveDelegate.ReceivedServer(value);
                     }
@@ -88,13 +87,10 @@ public class BluetoothConnect {
                     if (mClient_InputStream.available() <= 0)
                         continue;
 
-                    // 建立一個256位元組的緩衝
-                    byte[] buffer = new byte[256];
-                    // 每次讀取256位元組,並儲存其讀取的角標
-                    int count = mClient_InputStream.read(buffer);
+                    BufferedReader bufferedInputStream = new BufferedReader(new InputStreamReader(mClient_InputStream));
+                    String value = bufferedInputStream.readLine();
 
-                    if (count > 0) {
-                        String value = new String(buffer, 0, count, "utf-8");
+                    if (value.length() > 0) {
                         if (mReceiveDelegate != null)
                             mReceiveDelegate.ReceivedClient(value);
                     }
@@ -130,8 +126,8 @@ public class BluetoothConnect {
                 // 接收其客戶端的介面
                 mClient_Socket = mServerSocket.accept();
                 // 獲取到輸入流
-                mClient_InputStream = mClient_Socket.getInputStream();
                 mClient_OutputStream = mClient_Socket.getOutputStream();
+                mClient_InputStream = mClient_Socket.getInputStream();
             } catch (Exception e) {
                 // TODO: handle exception
                 e.printStackTrace();
